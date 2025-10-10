@@ -10,13 +10,44 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
-import anthropic
-import boto3
+import google.generativeai as genai
 import base64
 from email.mime.text import MIMEText
 
-# Set Bedrock API key in environment variable
-os.environ["AWS_BEARER_TOKEN_BEDROCK"] = "ABSKQmVkcm9ja0FQSUtleS03bXZoLWF0LTY2OTQ0NjEwMTEyNjpTZ2ZVK3FSMWJYR1BQcE54OENmY0RIWXhWRWJLelJJYUJnMVhFRXN1WGg0MmVFRWwzUWpBcjRqakxJZz0="
+# Gemini API key prompt if not found
+def get_gemini_api_key():
+    """Prompt user for Gemini API key if not found in environment."""
+    api_key = os.environ.get("GEMINI_API_KEY")
+    
+    if not api_key:
+        print("🔑 Gemini API Key Required")
+        print("=" * 50)
+        print("To use the AI email assistant, you need a Gemini API key.")
+        print("Get your key from: https://aistudio.google.com/")
+        print()
+        
+        while True:
+            api_key = input("Enter your Gemini API key: ").strip()
+            
+            if api_key and api_key.startswith("AIza"):
+                # Set for current session
+                os.environ["GEMINI_API_KEY"] = api_key
+                print("✅ API key set successfully!")
+                print()
+                return api_key
+            else:
+                print("❌ Invalid API key format. Gemini keys start with 'AIza'")
+                print("Please try again or visit https://aistudio.google.com/ to get your key.")
+                print()
+    
+    return api_key
+
+# Get Gemini API key
+GEMINI_API_KEY = get_gemini_api_key()
+
+# Configure Gemini
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel(GEMINI_MODEL)
 
 # Configuration
 CONTACTS = {
@@ -25,8 +56,8 @@ CONTACTS = {
     "technical": "idris.houiralami@berkeley.edu",
 }
 
-AWS_REGION = 'us-east-1'
-BEDROCK_MODEL_ID = 'us.anthropic.claude-sonnet-4-20250514-v1:0'
+# Gemini Configuration
+GEMINI_MODEL = 'gemini-2.0-flash'
 
 # Gmail API setup
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify']

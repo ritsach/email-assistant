@@ -71,6 +71,8 @@ tmp/
 test_*.py
 *_test.py
 tests/
+simple_*.py
+list_*.py
 
 # Documentation build
 docs/_build/

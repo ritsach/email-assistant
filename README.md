@@ -1,6 +1,6 @@
 # AI Email Assistant
 
-An intelligent email assistant powered by Claude Sonnet 4 that automatically processes emails, generates contextual replies, and forwards messages to appropriate stakeholders.
+An intelligent email assistant powered by Google Gemini that automatically processes emails, generates contextual replies, and forwards messages to appropriate stakeholders. Supports both standalone operation and web API integration.
 
 ## 🚀 Features
 
@@ -20,16 +20,18 @@ An intelligent email assistant powered by Claude Sonnet 4 that automatically pro
 
 ### Technical Features
 - **Gmail API Integration**: Seamless email processing
-- **AWS Bedrock Integration**: Claude Sonnet 4 for advanced AI responses
+- **Google Gemini Integration**: Advanced AI responses with Gemini 2.0 Flash
 - **Fallback System**: Rule-based responses when AI is unavailable
 - **Real-time Monitoring**: Continuous email processing
 - **Configuration Management**: Easy setup and customization
+- **Web API**: REST API for integration with other systems
+- **MCP Server**: Model Context Protocol server for AI client integration
 
 ## 📋 Prerequisites
 
 - Python 3.8+
 - Gmail account with API access
-- AWS account with Bedrock access
+- Google AI Studio account with Gemini API access
 - Google Cloud Console project
 
 ## 🛠️ Installation
@@ -58,19 +60,16 @@ pip install -r requirements.txt
 4. Create credentials (OAuth 2.0 Client ID)
 5. Download `credentials.json` to the project directory
 
-### 5. Set Up AWS Bedrock
-1. Go to [AWS Bedrock Console](https://console.aws.amazon.com/bedrock/)
-2. Request access to Claude Sonnet 4
-3. Set up AWS credentials:
+### 5. Set Up Google Gemini
+1. Go to [Google AI Studio](https://aistudio.google.com/)
+2. Create an API key
+3. Set up Gemini API key:
    ```bash
-   aws configure
+   export GEMINI_API_KEY="your-gemini-api-key-here"
    ```
-   Or create `~/.aws/credentials`:
-   ```ini
-   [default]
-   aws_access_key_id = YOUR_ACCESS_KEY
-   aws_secret_access_key = YOUR_SECRET_KEY
-   region = us-east-1
+   Or update `email_assistant.py`:
+   ```python
+   os.environ["GEMINI_API_KEY"] = "your-gemini-api-key-here"
    ```
 
 ## ⚙️ Configuration
@@ -103,7 +102,7 @@ company_info = {
 
 ### Standalone Mode (Original Functionality)
 ```bash
-python standalone_assistant.py
+./run_assistant.sh
 ```
 
 ### Continuous Monitoring
@@ -111,9 +110,20 @@ python standalone_assistant.py
 python email_monitor.py
 ```
 
+### Web API Mode
+```bash
+./run_web_api.sh
+# API available at http://localhost:5001
+```
+
 ### MCP Server Mode (AI Client Integration)
 ```bash
-python mcp_server.py
+./run_mcp.sh
+```
+
+### Gemini Integration
+```bash
+./run_gemini_integration.sh
 ```
 
 ### Real-time Processing (Advanced)
@@ -129,13 +139,22 @@ email-assistant/
 ├── email_assistant.py      # Main email processing script
 ├── ai_assistant.py         # AI-powered response generation
 ├── knowledge_base.py       # Company knowledge and tool system
+├── private_knowledge_base.py # Employee database management
 ├── email_monitor.py        # Continuous monitoring script
 ├── mcp_server.py           # MCP server for AI client integration
 ├── standalone_assistant.py # Standalone mode (original functionality)
+├── web_api.py              # Web API server
+├── gemini_integration.py   # Gemini integration script
 ├── requirements.txt        # Python dependencies
-├── setup_claude_api.md     # Claude API setup guide
+├── setup_gemini_api.md    # Gemini API setup guide
 ├── setup_realtime.md       # Real-time processing setup
+├── GEMINI_INTEGRATION.md   # Gemini integration guide
 ├── MCP_SETUP.md           # MCP server setup guide
+├── run_assistant.sh        # Assistant runner script
+├── run_web_api.sh          # Web API runner script
+├── run_mcp.sh              # MCP server runner script
+├── run_gemini_integration.sh # Gemini integration runner script
+├── setup_env.sh            # Environment setup script
 ├── README.md              # This file
 └── credentials.json       # Gmail API credentials (not in repo)
 ```
@@ -143,7 +162,7 @@ email-assistant/
 ## 🔧 Key Components
 
 ### AI Assistant (`ai_assistant.py`)
-- Claude Sonnet 4 integration
+- Google Gemini integration
 - Intent analysis and classification
 - Contextual reply generation
 - Tool access system
@@ -189,9 +208,9 @@ email-assistant/
    - Ensure `credentials.json` is in the project directory
    - Check OAuth 2.0 setup in Google Cloud Console
 
-2. **AWS Bedrock Access**
-   - Verify AWS credentials are correctly configured
-   - Ensure Claude Sonnet 4 access is approved
+2. **Google Gemini Access**
+   - Verify Gemini API key is correctly configured
+   - Ensure API key is active and valid
 
 3. **Email Processing Issues**
    - Check Gmail API quotas
@@ -221,9 +240,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 Acknowledgments
 
-- Anthropic for Claude Sonnet 4
-- Google for Gmail API
-- AWS for Bedrock platform
+- Google for Gemini AI and Gmail API
+- Anthropic for Claude (fallback system)
+- AWS for Bedrock platform (previous implementation)
 
 ## 📞 Support
 

@@ -5,7 +5,7 @@ Advanced AI Email Assistant with Claude Sonnet 4 and Tool Access
 
 import os
 import json
-import boto3
+import google.generativeai as genai
 from typing import Dict, List, Any, Optional
 from knowledge_base import knowledge_base, tool_system
 from private_knowledge_base import private_kb
@@ -14,21 +14,31 @@ class AIEmailAssistant:
     """Advanced AI Email Assistant with Claude Sonnet 4 and tool access."""
     
     def __init__(self):
-        # Set up Bedrock API key
-        self.api_key = os.environ.get("AWS_BEARER_TOKEN_BEDROCK", "ABSKQmVkcm9ja0FQSUtleS03bXZoLWF0LTY2OTQ0NjEwMTEyNjpTZ2ZVK3FSMWJYR1BQcE54OENmY0RIWXhWRWJLelJJYUJnMVhFRXN1WGg0MmVFRWwzUWpBcjRqakxJZz0=")
+        # Set up Gemini API key from environment variable
+        self.api_key = os.environ.get("GEMINI_API_KEY")
         
-        # Initialize Bedrock client with explicit credentials
-        self.client = boto3.client(
-            "bedrock-runtime", 
-            region_name="us-east-1",
-            aws_access_key_id="BedrockAPIKey-7mvh-at-669446101126",
-            aws_secret_access_key="SgfU+qR1bXGPPnX8CfcDHXxVEbKzRIaBg1XEsuXh42eEEl3QjAr4jjLIg="
-        )
+        if not self.api_key:
+            # Don't raise error here, let the calling code handle the prompt
+            self.api_key = None
+        
+        # Configure Gemini if API key is available
+        if self.api_key:
+            genai.configure(api_key=self.api_key)
+            # Initialize Gemini model
+            self.model = genai.GenerativeModel('gemini-2.0-flash')
+        else:
+            self.model = None
         
         # Assistant configuration
         self.assistant_name = "John"
         self.assistant_role = "Executive Assistant"
         self.company_name = "TechCorp Solutions"
+    
+    def initialize_gemini(self, api_key: str):
+        """Initialize Gemini with the provided API key."""
+        self.api_key = api_key
+        genai.configure(api_key=self.api_key)
+        self.model = genai.GenerativeModel('gemini-2.0-flash')
         
     def generate_intelligent_reply(self, sender: str, subject: str, body: str, 
                                  sender_email: str = "") -> str:
@@ -55,16 +65,14 @@ class AIEmailAssistant:
         user_prompt = self._create_user_prompt(sender_name, subject, body, response_info)
         
         try:
-            # Call Claude Sonnet 4 via Bedrock
-            response = self.client.converse(
-                modelId="us.anthropic.claude-sonnet-4-20250514-v1:0",
-                messages=[{"role": "user", "content": [{"text": f"{system_prompt}\n\n{user_prompt}"}]}]
-            )
+            # Call Gemini
+            full_prompt = f"{system_prompt}\n\n{user_prompt}"
+            response = self.model.generate_content(full_prompt)
             
-            return response["output"]["message"]["content"][0]["text"].strip()
+            return response.text.strip()
             
         except Exception as e:
-            print(f"Claude API error: {e}")
+            print(f"Gemini API error: {e}")
             # Fallback to rule-based response
             return self._generate_fallback_reply(sender_name, subject, body, response_info)
     

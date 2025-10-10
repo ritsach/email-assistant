@@ -11,7 +11,7 @@ from pathlib import Path
 # Add current directory to path for imports
 sys.path.append(str(Path(__file__).parent))
 
-from email_assistant import process_emails, get_gmail_service
+from email_assistant import process_emails, get_gmail_service, get_gemini_api_key
 
 def main():
     """Run the original email assistant functionality."""
@@ -19,6 +19,9 @@ def main():
     print("=" * 50)
     
     try:
+        # Get Gemini API key (will prompt if not found)
+        api_key = get_gemini_api_key()
+        
         # Check Gmail service connection
         service = get_gmail_service()
         print("✅ Connected to Gmail successfully")
