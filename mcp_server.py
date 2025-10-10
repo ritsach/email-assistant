@@ -18,6 +18,7 @@ from mcp.server.fastmcp import FastMCP
 from email_assistant import get_gmail_service, process_emails, CONTACTS
 from ai_assistant import ai_assistant
 from knowledge_base import knowledge_base, tool_system
+from private_knowledge_base import private_kb
 
 # Initialize MCP server
 mcp = FastMCP("email-assistant")
@@ -271,6 +272,189 @@ async def get_contact_info(contact_type: str, inquiry_context: str = "") -> str:
         return _format_response({
             "status": "error",
             "message": f"Failed to get contact info: {str(e)}"
+        })
+
+# ===== Employee Information Tools =====
+
+@mcp.tool()
+async def get_employee_info(email: str, disclosure_level: str = "public") -> str:
+    """
+    Get employee information based on disclosure level.
+    
+    Args:
+        email: Employee email address
+        disclosure_level: public, restricted, or private
+    """
+    try:
+        employee_info = private_kb.get_employee_info(email, disclosure_level)
+        
+        if not employee_info:
+            return _format_response({
+                "status": "error",
+                "message": f"Employee not found: {email}"
+            })
+        
+        return _format_response({
+            "status": "success",
+            "email": email,
+            "disclosure_level": disclosure_level,
+            "employee_info": employee_info
+        })
+    except Exception as e:
+        return _format_response({
+            "status": "error",
+            "message": f"Failed to get employee info: {str(e)}"
+        })
+
+@mcp.tool()
+async def get_employee_summary(email: str) -> str:
+    """
+    Get employee summary for email forwarding decisions.
+    
+    Args:
+        email: Employee email address
+    """
+    try:
+        summary = private_kb.get_employee_summary(email)
+        
+        if not summary:
+            return _format_response({
+                "status": "error",
+                "message": f"Employee not found: {email}"
+            })
+        
+        return _format_response({
+            "status": "success",
+            "email": email,
+            "summary": summary
+        })
+    except Exception as e:
+        return _format_response({
+            "status": "error",
+            "message": f"Failed to get employee summary: {str(e)}"
+        })
+
+@mcp.tool()
+async def search_employees_by_skill(skill: str) -> str:
+    """
+    Search employees by skill.
+    
+    Args:
+        skill: Skill to search for
+    """
+    try:
+        results = private_kb.search_employees_by_skill(skill)
+        
+        return _format_response({
+            "status": "success",
+            "skill": skill,
+            "results": results
+        })
+    except Exception as e:
+        return _format_response({
+            "status": "error",
+            "message": f"Failed to search employees: {str(e)}"
+        })
+
+@mcp.tool()
+async def search_employees_by_role(role: str) -> str:
+    """
+    Search employees by role.
+    
+    Args:
+        role: Role to search for
+    """
+    try:
+        results = private_kb.search_employees_by_role(role)
+        
+        return _format_response({
+            "status": "success",
+            "role": role,
+            "results": results
+        })
+    except Exception as e:
+        return _format_response({
+            "status": "error",
+            "message": f"Failed to search employees: {str(e)}"
+        })
+
+@mcp.tool()
+async def get_best_employee_for_inquiry(inquiry_type: str) -> str:
+    """
+    Get the best employee for a specific inquiry type.
+    
+    Args:
+        inquiry_type: Type of inquiry (sales_inquiries, support_requests, technical_issues, etc.)
+    """
+    try:
+        best_employee = private_kb.get_best_employee_for_inquiry(inquiry_type)
+        
+        if not best_employee:
+            return _format_response({
+                "status": "error",
+                "message": f"No employee found for inquiry type: {inquiry_type}"
+            })
+        
+        # Get employee summary
+        summary = private_kb.get_employee_summary(best_employee)
+        
+        return _format_response({
+            "status": "success",
+            "inquiry_type": inquiry_type,
+            "best_employee": best_employee,
+            "employee_summary": summary
+        })
+    except Exception as e:
+        return _format_response({
+            "status": "error",
+            "message": f"Failed to get best employee: {str(e)}"
+        })
+
+@mcp.tool()
+async def should_forward_to_employee(email: str, inquiry_type: str) -> str:
+    """
+    Check if an inquiry should be forwarded to a specific employee.
+    
+    Args:
+        email: Employee email address
+        inquiry_type: Type of inquiry
+    """
+    try:
+        should_forward = private_kb.should_forward_to_employee(email, inquiry_type)
+        
+        return _format_response({
+            "status": "success",
+            "email": email,
+            "inquiry_type": inquiry_type,
+            "should_forward": should_forward
+        })
+    except Exception as e:
+        return _format_response({
+            "status": "error",
+            "message": f"Failed to check forwarding: {str(e)}"
+        })
+
+@mcp.tool()
+async def get_all_employees(disclosure_level: str = "public") -> str:
+    """
+    Get all employees with filtered information.
+    
+    Args:
+        disclosure_level: public, restricted, or private
+    """
+    try:
+        employees = private_kb.get_all_employees(disclosure_level)
+        
+        return _format_response({
+            "status": "success",
+            "disclosure_level": disclosure_level,
+            "count": len(employees),
+            "employees": employees
+        })
+    except Exception as e:
+        return _format_response({
+            "status": "error",
+            "message": f"Failed to get employees: {str(e)}"
         })
 
 # ===== Configuration Tools =====

@@ -51,6 +51,9 @@ token.json
 *.key
 *.pem
 
+# Private Employee Database
+private_employee_database.json
+
 # AWS Credentials
 .aws/
 

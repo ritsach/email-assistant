@@ -8,6 +8,7 @@ import json
 import boto3
 from typing import Dict, List, Any, Optional
 from knowledge_base import knowledge_base, tool_system
+from private_knowledge_base import private_kb
 
 class AIEmailAssistant:
     """Advanced AI Email Assistant with Claude Sonnet 4 and tool access."""
@@ -251,23 +252,38 @@ Best regards,
         return intent["requires_reply"]
     
     def get_forwarding_recipient(self, intent_analysis: Dict[str, Any]) -> Optional[str]:
-        """Determine who to forward the email to."""
+        """Determine who to forward the email to using private knowledge base."""
         
         intent = intent_analysis["intent"]
-        response_info = intent_analysis["response_info"]
-        contacts = response_info.get("contacts", [])
         
         if not intent["requires_forwarding"]:
             return None
         
-        # Get appropriate contact based on category
-        category = intent["category"]
+        # Map intent categories to inquiry types
+        category_mapping = {
+            "sales": "sales_inquiries",
+            "support": "support_requests", 
+            "technical": "technical_issues",
+            "executive": "executive_requests",
+            "hr": "hr_inquiries"
+        }
         
-        for contact in contacts:
-            if contact["type"] == category:
-                return contact["info"]["email"]
+        inquiry_type = category_mapping.get(intent["category"], "support_requests")
         
-        # Fallback to first available contact
+        # Check if urgent matters need special handling
+        if intent["urgency"] == "high":
+            inquiry_type = "urgent_matters"
+        
+        # Get best employee for this inquiry type
+        best_employee = private_kb.get_best_employee_for_inquiry(inquiry_type)
+        
+        if best_employee:
+            return best_employee
+        
+        # Fallback to original logic
+        response_info = intent_analysis["response_info"]
+        contacts = response_info.get("contacts", [])
+        
         if contacts:
             return contacts[0]["info"]["email"]
         
