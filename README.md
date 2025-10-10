@@ -101,9 +101,9 @@ company_info = {
 
 ## 🚀 Usage
 
-### Manual Email Processing
+### Standalone Mode (Original Functionality)
 ```bash
-python email_assistant.py
+python standalone_assistant.py
 ```
 
 ### Continuous Monitoring
@@ -111,8 +111,16 @@ python email_assistant.py
 python email_monitor.py
 ```
 
+### MCP Server Mode (AI Client Integration)
+```bash
+python mcp_server.py
+```
+
 ### Real-time Processing (Advanced)
 See `setup_realtime.md` for Google Cloud Pub/Sub setup.
+
+### Claude Desktop Integration
+See `MCP_SETUP.md` for detailed MCP server setup instructions.
 
 ## 📁 Project Structure
 
@@ -122,9 +130,12 @@ email-assistant/
 ├── ai_assistant.py         # AI-powered response generation
 ├── knowledge_base.py       # Company knowledge and tool system
 ├── email_monitor.py        # Continuous monitoring script
+├── mcp_server.py           # MCP server for AI client integration
+├── standalone_assistant.py # Standalone mode (original functionality)
 ├── requirements.txt        # Python dependencies
 ├── setup_claude_api.md     # Claude API setup guide
 ├── setup_realtime.md       # Real-time processing setup
+├── MCP_SETUP.md           # MCP server setup guide
 ├── README.md              # This file
 └── credentials.json       # Gmail API credentials (not in repo)
 ```
@@ -148,6 +159,12 @@ email-assistant/
 - Email threading support
 - Forwarding logic
 - Fallback mechanisms
+
+### MCP Server (`mcp_server.py`)
+- Exposes email tools for AI clients
+- Preserves all original functionality
+- Claude Desktop integration
+- Standardized tool interface
 
 ## 🎯 Example Workflow
 

@@ -13,6 +13,9 @@ botocore==1.34.0
 # Anthropic SDK (fallback)
 anthropic==0.7.8
 
+# MCP Server
+mcp==1.0.0
+
 # Email processing
 email-validator==2.1.0
 
