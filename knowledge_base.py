@@ -7,6 +7,7 @@ import json
 import os
 from datetime import datetime
 from typing import Dict, List, Optional, Any
+from employee_data import employee_db, SecurityLevel
 
 class KnowledgeBase:
     """Company knowledge base with controlled information disclosure."""
@@ -117,10 +118,46 @@ class KnowledgeBase:
         # Determine disclosure level based on inquiry
         disclosure_level = self._determine_disclosure_level(inquiry_context)
         
-        if contact_type in self.contacts:
-            for role, info in self.contacts[contact_type].items():
-                if info["disclosure_level"] == "public" or disclosure_level == "high":
-                    return info
+        # Convert to SecurityLevel enum
+        if disclosure_level == "high":
+            security_level = SecurityLevel.CONFIDENTIAL
+        elif disclosure_level == "standard":
+            security_level = SecurityLevel.TRUSTED
+        else:
+            security_level = SecurityLevel.PUBLIC
+        
+        # Search employees with security level filtering
+        if contact_type in ["executive", "management", "support"]:
+            # Map contact types to departments
+            department_map = {
+                "executive": "Executive",
+                "management": ["Sales", "Marketing", "HR"],
+                "support": ["Support", "Engineering"]
+            }
+            
+            if contact_type == "executive":
+                employees = employee_db.get_department_employees("Executive", security_level, inquiry_context)
+            elif contact_type == "management":
+                employees = []
+                for dept in department_map["management"]:
+                    employees.extend(employee_db.get_department_employees(dept, security_level, inquiry_context))
+            else:  # support
+                employees = []
+                for dept in department_map["support"]:
+                    employees.extend(employee_db.get_department_employees(dept, security_level, inquiry_context))
+            
+            if employees:
+                # Return the first employee found
+                emp = employees[0]
+                return {
+                    "name": emp["name"],
+                    "email": emp.get("company_email", emp.get("direct_email", "")),
+                    "phone": emp.get("phone", ""),
+                    "title": emp["title"],
+                    "department": emp.get("department", ""),
+                    "disclosure_level": security_level.value,
+                    "security_level": security_level.value
+                }
         
         # Fallback to general contact
         return {
@@ -128,7 +165,8 @@ class KnowledgeBase:
             "email": "support@techcorp.com",
             "phone": "+1 (555) 123-4567",
             "title": "Customer Support",
-            "disclosure_level": "public"
+            "disclosure_level": "public",
+            "security_level": "public"
         }
 
     def get_service_info(self, service_name: str, inquiry_context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -189,22 +227,37 @@ class KnowledgeBase:
         
         return "standard"
 
-    def search_contacts(self, query: str) -> List[Dict[str, Any]]:
-        """Search contacts based on query."""
+    def search_contacts(self, query: str, inquiry_context: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+        """Search contacts based on query with security level filtering."""
+        
+        # Determine security level based on inquiry context
+        disclosure_level = self._determine_disclosure_level(inquiry_context or {})
+        
+        if disclosure_level == "high":
+            security_level = SecurityLevel.CONFIDENTIAL
+        elif disclosure_level == "standard":
+            security_level = SecurityLevel.TRUSTED
+        else:
+            security_level = SecurityLevel.PUBLIC
+        
+        # Search employees with security level filtering
+        employees = employee_db.search_employees(query, security_level, inquiry_context)
         
         results = []
-        query_lower = query.lower()
-        
-        for category, contacts in self.contacts.items():
-            for role, info in contacts.items():
-                if (query_lower in info["name"].lower() or 
-                    query_lower in info["title"].lower() or
-                    query_lower in role.lower()):
-                    results.append({
-                        "category": category,
-                        "role": role,
-                        "info": info
-                    })
+        for emp in employees:
+            results.append({
+                "category": emp.get("department", "Unknown"),
+                "role": emp.get("title", "Unknown"),
+                "info": {
+                    "name": emp["name"],
+                    "email": emp.get("company_email", emp.get("direct_email", "")),
+                    "phone": emp.get("phone", ""),
+                    "title": emp["title"],
+                    "department": emp.get("department", ""),
+                    "disclosure_level": emp["security_level"],
+                    "security_level": emp["security_level"]
+                }
+            })
         
         return results
 
@@ -333,7 +386,8 @@ class ToolSystem:
         
         elif tool_name == "search_contacts":
             return self.kb.search_contacts(
-                parameters.get("query", "")
+                parameters.get("query", ""),
+                parameters.get("inquiry_context", {})
             )
         
         elif tool_name == "get_response_info":
